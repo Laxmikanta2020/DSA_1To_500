@@ -1,4 +1,4 @@
-package com.laxmi.samal.bobblesort;
+package com.laxmi.samal.sort;
 
 import java.util.Arrays;
 
@@ -71,4 +71,6 @@ public class SelectionSort {
 
 
 }
-//Laxmikanat 03-10-2025#Bengaluru/hood
+//Laxmikanat 03-10-2025#Bengaluru/hoodi
+
+//Time Complexity: O(n²)

@@ -1,4 +1,4 @@
-package com.laxmi.samal.bobblesort;
+package com.laxmi.samal.sort;
 
 import java.util.Arrays;
 
