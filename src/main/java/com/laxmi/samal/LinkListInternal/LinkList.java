@@ -27,7 +27,6 @@ public class LinkList {
         }
         if (index == size) {
             addTail(val);
-            return;
         } else {
             Node temp = new Node(val);
             Node temp1 = head;
@@ -104,6 +103,8 @@ class Test {
         linkList.display();
         System.out.println(linkList.size);
         linkList.insert(111, 2);
+        linkList.display();
+        linkList.delete( 2);
         linkList.display();
 
 
