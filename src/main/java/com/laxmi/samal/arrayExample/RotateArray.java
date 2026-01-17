@@ -9,7 +9,7 @@ public class RotateArray {
 
         //10 5 1 44 40 33 80 50 40 7
         int d = 3;
-        d = d % arr.length;
+        d = d % arr.length; // if d is more then length
         rotate(0, d - 1, arr);
         rotate(d, arr.length - 1, arr);
         rotate(0, arr.length - 1, arr);

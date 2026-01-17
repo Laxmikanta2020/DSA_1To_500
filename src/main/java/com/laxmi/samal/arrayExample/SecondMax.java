@@ -1,12 +1,17 @@
 package com.laxmi.samal.arrayExample;
 
 import java.util.Arrays;
+import java.util.Comparator;
 
 public class SecondMax {
 
     public static void main(String[] args) {
 
         int[] arr = {1, 5, 10, 7, 40, 50,80,33,44};
+
+        Integer smex = Arrays.stream(arr).boxed().sorted(Comparator.reverseOrder()).skip(1).findFirst().orElse(null);
+
+        System.out.print(smex);
 
         int max = arr[0];
         int secondMax = Integer.MIN_VALUE;
