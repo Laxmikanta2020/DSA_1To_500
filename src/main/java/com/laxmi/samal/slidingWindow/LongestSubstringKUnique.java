@@ -7,6 +7,7 @@ public class LongestSubstringKUnique {
     public static void main(String[] args) {
 
         int result1 = longestSubstringWithKUnique("aabacbebebe", 3);
+        System.out.println(result1);
     }
 
     public static int longestSubstringWithKUnique(String s, int k) {
