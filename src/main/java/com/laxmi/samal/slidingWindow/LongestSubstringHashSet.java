@@ -32,7 +32,7 @@ public class LongestSubstringHashSet {
         while (j < str.length()) {
             char c = str.charAt(j);
             while (hmap.contains(c)) {
-                hmap.remove(str.charAt(c));
+                hmap.remove(str.charAt(i));
                 i++;
             }
             hmap.add(c);
