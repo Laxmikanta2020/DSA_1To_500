@@ -54,7 +54,6 @@ public class CountFrequencyOfElements {
                 .entrySet().stream().filter(x -> x.getValue() == 1).map(Map.Entry::getKey).findFirst().orElse(null);
         System.out.println(integerLongEntry);
 
-
         //If it is String
 
         String name="HiBoddy";

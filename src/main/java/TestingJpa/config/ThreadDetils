@@ -1,0 +1,144 @@
+
+
+@Configuration
+@EnableAsync
+public class AsyncConfig {
+
+    // Executor for I/O operations (database, API calls)
+    @Bean(name = "ioExecutor")
+    public Executor ioExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(10);
+        executor.setMaxPoolSize(20);
+        executor.setQueueCapacity(100);
+        executor.setThreadNamePrefix("IO-");
+        executor.setWaitForTasksToCompleteOnShutdown(true);
+        executor.setAwaitTerminationSeconds(60);
+        executor.initialize();
+        return executor;
+    }
+
+    // Executor for email operations
+    @Bean(name = "emailExecutor")
+    public Executor emailExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(5);
+        executor.setMaxPoolSize(10);
+        executor.setQueueCapacity(50);
+        executor.setThreadNamePrefix("EMAIL-");
+        executor.setWaitForTasksToCompleteOnShutdown(true);
+        executor.setAwaitTerminationSeconds(60);
+        executor.initialize();
+        return executor;
+    }
+
+    // Executor for file operations
+    @Bean(name = "fileExecutor")
+    public Executor fileExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(3);
+        executor.setMaxPoolSize(8);
+        executor.setQueueCapacity(50);
+        executor.setThreadNamePrefix("FILE-");
+        executor.setWaitForTasksToCompleteOnShutdown(true);
+        executor.initialize();
+        return executor;
+    }
+
+  // Inject multiple executors
+     @Autowired
+     @Qualifier("ioExecutor")
+     private Executor ioExecutor;
+
+     @Autowired
+     @Qualifier("emailExecutor")
+     private Executor emailExecutor;
+
+     @Autowired
+     @Qualifier("fileExecutor")
+     private Executor fileExecutor;
+
+ public CompletableFuture<String> saveEmployeeAndNotifyAsync(Employee employee, String email, String subject) {
+        logger.info("Method 14: Save employee and notify - {}", employee.getName());
+
+        return saveEmployeeAsync(employee)
+            .thenCompose(savedEmployee -> {
+                logger.info("Employee saved, now sending email");
+                return sendEmailNotificationAsync(email, subject, "Employee " + savedEmployee.getName() + " has been created");
+            })
+            .thenCompose(emailResult -> {
+                logger.info("Email sent, now generating report");
+                return generateReportAsync(employee.getId());
+            })
+            .thenApply(reportName -> {
+                logger.info("All operations completed: {}", reportName);
+                return "All operations completed successfully";
+            })
+            .exceptionally(ex -> {
+                logger.error("Error in composite operation: {}", ex.getMessage());
+                throw new RuntimeException("Composite operation failed", ex);
+            });
+    }
+
+    // ========== METHOD 15: Composite - Save Multiple Employees in Parallel ==========
+    public CompletableFuture<List<Employee>> saveMultipleEmployeesInParallelAsync(List<Employee> employees) {
+        logger.info("Method 15: Saving {} employees in parallel", employees.size());
+
+        // Create futures for each employee
+        List<CompletableFuture<Employee>> futures = employees.stream()
+            .map(this::saveEmployeeAsync)
+            .collect(Collectors.toList());
+
+        // Wait for all futures to complete
+        return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
+            .thenApply(v -> futures.stream()
+                .map(CompletableFuture::join)
+                .collect(Collectors.toList())
+            )
+            .exceptionally(ex -> {
+                logger.error("Error saving multiple employees: {}", ex.getMessage());
+                throw new RuntimeException("Multi-save failed", ex);
+            });
+    }
+}
+
+
+ // ========== METHOD 1: Save Employee ==========
+    public CompletableFuture<Employee> saveEmployeeAsync(Employee employee) {
+        logger.info("Method 1: Saving employee - {}", employee.getName());
+
+        return CompletableFuture.supplyAsync(
+            () -> {
+                logger.info("Executing on thread: {}", Thread.currentThread().getName());
+                return employeeRepository.save(employee);
+            },
+            ioExecutor
+        )
+        .exceptionally(ex -> {
+            logger.error("Error saving employee: {}", ex.getMessage());
+            throw new RuntimeException("Save failed", ex);
+        });
+    }
+
+ // ========== ENDPOINT 9: Save & Notify (Composite) ==========
+    @PostMapping("/save-and-notify")
+    public CompletableFuture<ResponseEntity<String>> saveAndNotify(
+            @RequestBody Employee employee,
+            @RequestParam String email,
+            @RequestParam String subject) {
+        logger.info("Endpoint 9: POST /save-and-notify");
+
+        return employeeService.saveEmployeeAndNotifyAsync(employee, email, subject)
+            .thenApply(ResponseEntity::ok)
+            .exceptionally(ex -> ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build());
+    }
+
+    // ========== ENDPOINT 10: Batch Save Multiple ==========
+    @PostMapping("/save-multiple")
+    public CompletableFuture<ResponseEntity<List<Employee>>> saveMultiple(@RequestBody List<Employee> employees) {
+        logger.info("Endpoint 10: POST /save-multiple");
+
+        return employeeService.saveMultipleEmployeesInParallelAsync(employees)
+            .thenApply(saved -> ResponseEntity.status(HttpStatus.CREATED).body(saved))
+            .exceptionally(ex -> ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build());
+    }

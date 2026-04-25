@@ -19,8 +19,8 @@ public class RotateArray {
         k = k % n; // handle k > n
 
         reverse(arr, 0, k - 1);     // Step 1
-        reverse(arr, k, n - 1);     // Step 2
-        reverse(arr, 0, n - 1);     // Step 3
+        reverse(arr, k, n - 1);         // Step 2
+        reverse(arr, 0, n - 1);  //  Step 3
     }
 
     // Reverse array between start and end

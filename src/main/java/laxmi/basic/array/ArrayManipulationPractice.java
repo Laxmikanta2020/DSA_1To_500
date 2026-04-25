@@ -1,10 +1,9 @@
 package laxmi.basic.array;
 
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
-public class ArrayManuplationPratice {
+public class ArrayManipulationPractice {
 
     public static void main(String[] args) {
 

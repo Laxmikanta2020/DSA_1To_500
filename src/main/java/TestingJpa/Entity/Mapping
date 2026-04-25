@@ -1,0 +1,121 @@
+
+Breaking Cyclic Mapping: Simple Explanation
+@Entity
+public class Department {
+
+    @Id
+    private Integer did;
+    private String dname;
+
+    @OneToOne
+    @JsonManagedReference  // ← This is the "forward" side
+    private Employee employee;
+
+}
+
+@Entity
+public class Employee {
+    @Id
+    private Integer id;
+    private String name;
+
+    @OneToOne
+    @JoinColumn(name = "D_id")
+    @JsonBackReference  // ← This is the "back" side (omitted from JSON)
+    private Department dep;
+
+}
+
+or we can used @JsonIgnore
+
+5. Foreign Key Strategies
+Strategy 1: Shared Primary Key
+
+java@Entity
+@Table(name = "user_account")
+public class User {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
+
+    private String username;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @PrimaryKeyJoinColumn  // Uses same PK as User
+    private UserProfile profile;
+}
+
+@Entity
+@Table(name = "user_profile")
+public class UserProfile {
+    @Id
+    private Integer id;  // Same value as User.id
+
+    private String bio;
+
+    // FK to user_account.id implicit
+}
+Strategy 2: Foreign Key in Child (Most Common)
+java@Entity
+public class Person {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "passport_id")  // FK in Person table
+    private Passport passport;
+}
+
+@Entity
+public class Passport {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;}
+
+    TO Solution  N+1
+    //we can use @EntityGraph or we can used JoIN query
+       @EntityGraph(attributePaths = {"dep"})// in repository
+       NamedEntityGraph(
+           name = "employee-with-department",  // Graph name
+           attributeNodes = {
+               @NamedAttributeNode("dep")  // Include "dep" when fetching (dep) is same name as variable declerd for mapping
+           }
+       )
+       @Entity
+       @Data
+       @NoArgsConstructor
+       @AllArgsConstructor
+       @Builder
+       public class Employee {
+
+           @Id
+           @GeneratedValue(strategy = GenerationType.IDENTITY)
+           private Integer id;
+
+           private String name;
+           private Integer age;
+
+           @OneToOne(fetch = FetchType.LAZY)  // Normally LAZY
+           @JoinColumn(name = "D_id")
+           private Department dep;
+       }
+
+       @Entity
+       @Data
+       @NoArgsConstructor
+       @AllArgsConstructor
+       @Builder
+       public class Department {
+
+           @Id
+           @GeneratedValue(strategy = GenerationType.IDENTITY)
+           private Integer did;
+
+           private String dname;
+           private Integer dcode;
+
+           @OneToOne(mappedBy = "dep")
+           @JsonIgnore
+           private Employee employee;
